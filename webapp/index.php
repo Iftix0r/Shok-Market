@@ -7,67 +7,177 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Outfit for a modern, rounded, vibrant look -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="app">
-        <!-- Header -->
-        <header>
-            <div class="user-info">
-                <img id="user-avatar" src="https://ui-avatars.com/api/?name=User&background=random" alt="Avatar" style="display:none;">
-                <span id="user-name">Mehmon</span>
-            </div>
-            <h1>Shok Market</h1>
-        </header>
-
         <!-- Main Content -->
         <main id="main-content">
-            <!-- Categories / Products (Home) -->
+            
+            <!-- Home Page -->
             <section id="page-home" class="page active">
-                <div class="categories">
-                    <button class="cat-btn active" data-cat="all">Barchasi</button>
-                    <button class="cat-btn" data-cat="electronics">Elektronika</button>
-                    <button class="cat-btn" data-cat="clothing">Kiyimlar</button>
-                    <button class="cat-btn" data-cat="food">Oziq-ovqat</button>
+                <!-- Header -->
+                <header class="app-header">
+                    <div class="logo">
+                        <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+                        <span>SHOK<br><b style="font-size:16px;">MARKET</b></span>
+                    </div>
+                    <div class="header-profile" onclick="document.querySelector('[data-target=\'page-profile\']').click()">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </header>
+
+                <!-- Search -->
+                <div class="search-container">
+                    <div class="search-box">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="search-input" placeholder="Katalogdan qidirish...">
+                        <i class="fas fa-microphone mic-icon"></i>
+                    </div>
                 </div>
-                
+
+                <!-- Banner Slider -->
+                <div class="banner-slider">
+                    <div class="banner">
+                        <div class="banner-content">
+                            <h3>YANGI TAKLIFLAR!</h3>
+                            <p>Sariqroq, sharbatli va yangi!<br>Shok Chegirmalar!</p>
+                            <div class="timer">
+                                <span>00</span>:<span>02</span>:<span>50</span>:<span>23</span>
+                            </div>
+                            <button class="banner-btn">Xarid qilish</button>
+                        </div>
+                        <img src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&q=80&w=300&h=200" alt="Banner fruits" class="banner-img">
+                    </div>
+                </div>
+
+                <!-- Categories -->
+                <div class="section-title">
+                    <h4>Kategoriyalar</h4>
+                </div>
+                <div class="categories-grid">
+                    <div class="cat-item active" data-cat="all">
+                        <div class="cat-icon"><i class="fas fa-border-all"></i></div>
+                        <span>Barchasi</span>
+                    </div>
+                    <div class="cat-item" data-cat="fruits">
+                        <div class="cat-icon"><i class="fas fa-apple-alt"></i></div>
+                        <span>Mevalar &<br>Sabzavotlar</span>
+                    </div>
+                    <div class="cat-item" data-cat="meat">
+                        <div class="cat-icon"><i class="fas fa-drumstick-bite"></i></div>
+                        <span>Go'sht &<br>Sut</span>
+                    </div>
+                    <div class="cat-item" data-cat="bakery">
+                        <div class="cat-icon"><i class="fas fa-bread-slice"></i></div>
+                        <span>Non &<br>Shirinliklar</span>
+                    </div>
+                    <div class="cat-item" data-cat="drinks">
+                        <div class="cat-icon"><i class="fas fa-tint"></i></div>
+                        <span>Ichimliklar</span>
+                    </div>
+                </div>
+
+                <!-- Products Grid -->
+                <div class="section-header">
+                    <h4>Ommabop Mahsulotlar</h4>
+                    <a href="#" class="view-all" onclick="document.querySelector('[data-target=\'page-catalog\']').click()">Barchasi <i class="fas fa-chevron-right"></i></a>
+                </div>
                 <div class="products-grid" id="products-container">
                     <!-- Products injected by JS -->
                 </div>
+                <div style="height: 30px;"></div>
             </section>
 
-            <!-- Cart -->
+            <!-- Catalog Page -->
+            <section id="page-catalog" class="page">
+                <header class="page-header">
+                    <h2>Katalog</h2>
+                </header>
+                <div class="catalog-list">
+                    <div class="cat-list-item" onclick="filterByCat('fruits')">
+                        <i class="fas fa-apple-alt"></i> Mevalar va Sabzavotlar <i class="fas fa-chevron-right arrow"></i>
+                    </div>
+                    <div class="cat-list-item" onclick="filterByCat('meat')">
+                        <i class="fas fa-drumstick-bite"></i> Go'sht va Sut mahsulotlari <i class="fas fa-chevron-right arrow"></i>
+                    </div>
+                    <div class="cat-list-item" onclick="filterByCat('bakery')">
+                        <i class="fas fa-bread-slice"></i> Non va Shirinliklar <i class="fas fa-chevron-right arrow"></i>
+                    </div>
+                    <div class="cat-list-item" onclick="filterByCat('drinks')">
+                        <i class="fas fa-wine-bottle"></i> Ichimliklar <i class="fas fa-chevron-right arrow"></i>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Cart Page -->
             <section id="page-cart" class="page">
-                <h2>Savatcha</h2>
-                <div id="cart-items" style="margin-top: 15px;">
-                    <p class="empty-cart" style="text-align:center; padding: 40px 0; color: var(--hint-color);">
-                        <i class="fas fa-shopping-basket" style="font-size: 40px; margin-bottom:10px;"></i><br>
-                        Savatchangiz bo'sh
-                    </p>
+                <header class="page-header">
+                    <h2>Savatcha</h2>
+                </header>
+                <div id="cart-items" class="cart-container">
+                    <!-- Cart items -->
                 </div>
                 <div class="cart-summary" style="display:none;">
-                    <div class="total">Jami: <span id="cart-total">0</span> so'm</div>
-                    <button id="btn-checkout" class="btn-primary">Buyurtma berish</button>
+                    <div class="summary-row">
+                        <span>Mahsulotlar:</span>
+                        <span id="cart-subtotal">0 so'm</span>
+                    </div>
+                    <div class="summary-row total-row">
+                        <span>Jami:</span>
+                        <span id="cart-total">0 so'm</span>
+                    </div>
+                    <button id="btn-checkout" class="btn-checkout">Buyurtma berish</button>
                 </div>
             </section>
 
-            <!-- Profile -->
+            <!-- Promos Page -->
+            <section id="page-promo" class="page">
+                <header class="page-header">
+                    <h2>Aksiyalar</h2>
+                </header>
+                <div class="promo-empty">
+                    <i class="fas fa-tags"></i>
+                    <h3>Shok Chegirmalar</h3>
+                    <p>Hozircha aksiyalar mavjud emas</p>
+                </div>
+            </section>
+
+            <!-- Profile Page -->
             <section id="page-profile" class="page">
-                <div class="profile-card">
-                    <div class="profile-header">
-                        <div class="avatar-large" id="profile-avatar-placeholder">
+                <header class="page-header">
+                    <h2>Profil</h2>
+                </header>
+                <div class="profile-wrap">
+                    <div class="profile-card">
+                        <div class="avatar-large">
                             <i class="fas fa-user"></i>
                         </div>
-                        <h2 id="profile-name">Telegram Foydalanuvchi</h2>
+                        <h2 id="profile-name">Mehmon</h2>
                         <p id="profile-username">@username</p>
                     </div>
-                    <div class="profile-details">
-                        <div class="detail-item">
-                            <i class="fas fa-id-badge"></i>
-                            <span id="profile-id">ID: 000000</span>
+                    
+                    <div class="profile-menu">
+                        <div class="menu-item">
+                            <div class="menu-icon"><i class="fas fa-history"></i></div>
+                            <span>Buyurtmalar tarixi</span>
+                            <i class="fas fa-chevron-right arrow"></i>
                         </div>
-                        <div class="detail-item">
-                            <i class="fas fa-language"></i>
-                            <span id="profile-lang">Til: uz</span>
+                        <div class="menu-item">
+                            <div class="menu-icon"><i class="fas fa-map-marker-alt"></i></div>
+                            <span>Manzillarim</span>
+                            <i class="fas fa-chevron-right arrow"></i>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-icon"><i class="fas fa-cog"></i></div>
+                            <span>Sozlamalar</span>
+                            <i class="fas fa-chevron-right arrow"></i>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-icon"><i class="fas fa-headset"></i></div>
+                            <span>Qo'llab-quvvatlash</span>
+                            <i class="fas fa-chevron-right arrow"></i>
                         </div>
                     </div>
                 </div>
@@ -78,7 +188,11 @@
         <nav class="bottom-nav">
             <a href="#" class="nav-item active" data-target="page-home">
                 <i class="fas fa-home"></i>
-                <span>Asosiy</span>
+                <span>Bosh sahifa</span>
+            </a>
+            <a href="#" class="nav-item" data-target="page-catalog">
+                <i class="fas fa-search"></i>
+                <span>Katalog</span>
             </a>
             <a href="#" class="nav-item" data-target="page-cart">
                 <div class="cart-icon-wrapper">
@@ -87,6 +201,10 @@
                 </div>
                 <span>Savatcha</span>
             </a>
+            <a href="#" class="nav-item" data-target="page-promo">
+                <i class="fas fa-percent"></i>
+                <span>Aksiyalar</span>
+            </a>
             <a href="#" class="nav-item" data-target="page-profile">
                 <i class="fas fa-user"></i>
                 <span>Profil</span>
@@ -94,7 +212,6 @@
         </nav>
     </div>
 
-    <!-- Notification Toast -->
     <div id="toast" class="toast"></div>
 
     <script src="js/app.js"></script>

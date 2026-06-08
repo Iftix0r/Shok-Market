@@ -1,7 +1,6 @@
 const tg = window.Telegram.WebApp;
-tg.expand(); // Expand app to full height
+tg.expand();
 
-// Initialize User
 const user = tg.initDataUnsafe?.user || {
     id: 123456,
     first_name: "Mehmon",
@@ -9,70 +8,93 @@ const user = tg.initDataUnsafe?.user || {
     language_code: "uz"
 };
 
-// Dummy Products
+// Oziq-ovqat mahsulotlari (rasmga mos)
 const products = [
-    { id: 1, name: "Aqlli Soat Pro Max", price: 350000, category: "electronics", image: "https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&q=80&w=200&h=200" },
-    { id: 2, name: "Simsiz Quloqchin 5.0", price: 150000, category: "electronics", image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&q=80&w=200&h=200" },
-    { id: 3, name: "Zamonaviy Futbolka", price: 85000, category: "clothing", image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=200&h=200" },
-    { id: 4, name: "Krossovka Sport", price: 250000, category: "clothing", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=200&h=200" },
-    { id: 5, name: "Tabiiy Asal 1kg", price: 60000, category: "food", image: "https://images.unsplash.com/photo-1587049352847-4d4b127a5655?auto=format&fit=crop&q=80&w=200&h=200" },
-    { id: 6, name: "Meva qoqi to'plami", price: 45000, category: "food", image: "https://images.unsplash.com/photo-1622245532560-a29288f61ce3?auto=format&fit=crop&q=80&w=200&h=200" }
+    { id: 1, name: "Sariq Banan", price: 14500, unit: "so'm/kg", category: "fruits", image: "https://images.unsplash.com/photo-1603833665858-e61d17a86224?auto=format&fit=crop&q=80&w=200&h=200" },
+    { id: 2, name: "Qizil Pomidor", price: 14500, unit: "so'm/kg", category: "fruits", image: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&q=80&w=200&h=200" },
+    { id: 3, name: "Yangi Sut 1L", price: 14500, unit: "so'm/dona", category: "meat", image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&q=80&w=200&h=200" },
+    { id: 4, name: "Issiq Non", price: 14500, unit: "so'm/dona", category: "bakery", image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=200&h=200" },
+    { id: 5, name: "Srinlutile Ichimliklar", price: 14500, unit: "so'm/dona", category: "drinks", image: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80&w=200&h=200" },
+    { id: 6, name: "Yangi Bodring", price: 10500, unit: "so'm/kg", category: "fruits", image: "https://images.unsplash.com/photo-1604977042946-1eecc30f269e?auto=format&fit=crop&q=80&w=200&h=200" }
 ];
 
 let cart = {};
 
-// DOM Elements
 const productsContainer = document.getElementById('products-container');
 const cartItemsContainer = document.getElementById('cart-items');
 const cartSummary = document.querySelector('.cart-summary');
 const cartTotalEl = document.getElementById('cart-total');
+const cartSubtotalEl = document.getElementById('cart-subtotal');
 const cartBadge = document.getElementById('cart-badge');
 const toastEl = document.getElementById('toast');
+const searchInput = document.getElementById('search-input');
 
-// Init setup
 function init() {
-    // Header setup
-    document.getElementById('user-name').innerText = user.first_name;
-    
-    // Profile setup
-    document.getElementById('profile-name').innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-    document.getElementById('profile-username').innerText = user.username ? '@' + user.username : 'Kiritilmagan';
-    document.getElementById('profile-id').innerText = `ID: ${user.id}`;
-    document.getElementById('profile-lang').innerText = `Til: ${user.language_code || 'uz'}`;
+    document.getElementById('profile-name').innerText = user.first_name;
+    document.getElementById('profile-username').innerText = user.username ? '@' + user.username : '';
 
     renderProducts('all');
     setupNavigation();
     setupCategoryFilter();
+
+    searchInput.addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        const filtered = products.filter(p => p.name.toLowerCase().includes(term));
+        renderFilteredProducts(filtered);
+    });
 }
 
 function renderProducts(category) {
-    productsContainer.innerHTML = '';
     const filtered = category === 'all' ? products : products.filter(p => p.category === category);
-    
-    filtered.forEach(p => {
+    renderFilteredProducts(filtered);
+}
+
+function renderFilteredProducts(productsList) {
+    productsContainer.innerHTML = '';
+    productsList.forEach(p => {
+        const qtyInCart = cart[p.id] ? cart[p.id].quantity : 0;
+        const btnHtml = qtyInCart > 0 
+            ? `<button class="add-btn added" onclick="addToCart(${p.id})"><i class="fas fa-check"></i> Savatchada (${qtyInCart})</button>`
+            : `<button class="add-btn" onclick="addToCart(${p.id})">Savatchaga <i class="fas fa-plus"></i></button>`;
+
         const card = document.createElement('div');
         card.className = 'product-card';
         card.innerHTML = `
+            <button class="fav-btn"><i class="fas fa-bookmark" style="color:var(--primary)"></i></button>
             <img src="${p.image}" class="product-img" alt="${p.name}">
+            <div class="product-price">${p.price.toLocaleString('uz-UZ')} <span style="font-size:10px; font-weight:600">${p.unit}</span></div>
             <div class="product-title">${p.name}</div>
-            <div class="product-price">${p.price.toLocaleString('uz-UZ')} so'm</div>
-            <button class="add-to-cart-btn" onclick="addToCart(${p.id})">
-                <i class="fas fa-cart-plus"></i> Qo'shish
-            </button>
+            ${btnHtml}
         `;
         productsContainer.appendChild(card);
     });
 }
 
 function setupCategoryFilter() {
-    const btns = document.querySelectorAll('.cat-btn');
+    const btns = document.querySelectorAll('.cat-item');
     btns.forEach(btn => {
         btn.addEventListener('click', (e) => {
             btns.forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-            renderProducts(e.target.dataset.cat);
+            const targetBtn = e.target.closest('.cat-item');
+            targetBtn.classList.add('active');
+            renderProducts(targetBtn.dataset.cat);
         });
     });
+}
+
+window.filterByCat = function(cat) {
+    document.querySelectorAll('.bottom-nav .nav-item').forEach(nav => nav.classList.remove('active'));
+    document.querySelector('.nav-item[data-target="page-home"]').classList.add('active');
+    
+    document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+    document.getElementById('page-home').classList.add('active');
+
+    document.querySelectorAll('.cat-item').forEach(b => b.classList.remove('active'));
+    const targetBtn = document.querySelector(`.cat-item[data-cat="${cat}"]`);
+    if(targetBtn) targetBtn.classList.add('active');
+    
+    renderProducts(cat);
+    window.scrollTo(0,0);
 }
 
 function setupNavigation() {
@@ -101,7 +123,6 @@ function setupNavigation() {
     });
 }
 
-// Cart functionality
 window.addToCart = function(productId) {
     if (cart[productId]) {
         cart[productId].quantity += 1;
@@ -110,6 +131,11 @@ window.addToCart = function(productId) {
         cart[productId] = { ...product, quantity: 1 };
     }
     updateCartBadge();
+    
+    // Re-render home list to show 'added' state
+    const activeCatBtn = document.querySelector('.cat-item.active');
+    renderProducts(activeCatBtn ? activeCatBtn.dataset.cat : 'all');
+    
     showToast("Savatchaga qo'shildi!");
 };
 
@@ -121,6 +147,12 @@ window.updateQty = function(productId, delta) {
         }
         renderCart();
         updateCartBadge();
+        
+        // Re-render home list if visible
+        if(document.getElementById('page-home').classList.contains('active')) {
+            const activeCatBtn = document.querySelector('.cat-item.active');
+            renderProducts(activeCatBtn ? activeCatBtn.dataset.cat : 'all');
+        }
     }
 };
 
@@ -139,7 +171,12 @@ function renderCart() {
     const cartArray = Object.values(cart);
     
     if (cartArray.length === 0) {
-        cartItemsContainer.innerHTML = `<p class="empty-cart" style="text-align:center; padding: 40px 0; color: var(--hint-color);"><i class="fas fa-shopping-basket" style="font-size: 40px; margin-bottom:10px;"></i><br>Savatchangiz bo'sh</p>`;
+        cartItemsContainer.innerHTML = `
+            <div class="empty-cart">
+                <i class="fas fa-shopping-bag"></i>
+                <h3>Savatchangiz bo'sh</h3>
+                <p>Katalogdan mahsulotlarni tanlang</p>
+            </div>`;
         cartSummary.style.display = 'none';
         tg.MainButton.hide();
         return;
@@ -152,43 +189,39 @@ function renderCart() {
         div.className = 'cart-item';
         div.innerHTML = `
             <img src="${item.image}" class="cart-item-img" alt="${item.name}">
-            <div class="cart-item-info">
-                <div class="cart-item-title">${item.name}</div>
-                <div class="cart-item-price">${(item.price * item.quantity).toLocaleString('uz-UZ')} so'm</div>
+            <div class="cart-info">
+                <div class="cart-title">${item.name}</div>
+                <div class="cart-price">${item.price.toLocaleString('uz-UZ')} so'm</div>
             </div>
-            <div class="cart-qty-controls">
+            <div class="qty-controls">
                 <button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
-                <span>${item.quantity}</span>
+                <span class="qty-val">${item.quantity}</span>
                 <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
             </div>
         `;
         cartItemsContainer.appendChild(div);
     });
 
-    cartTotalEl.innerText = total.toLocaleString('uz-UZ');
+    cartSubtotalEl.innerText = total.toLocaleString('uz-UZ') + " so'm";
+    cartTotalEl.innerText = total.toLocaleString('uz-UZ') + " so'm";
     cartSummary.style.display = 'block';
 
-    // Update TG Main Button
     tg.MainButton.text = `BUYURTMA BERISH (${total.toLocaleString('uz-UZ')} so'm)`;
-    tg.MainButton.color = tg.themeParams.button_color || '#50a8eb';
-    tg.MainButton.textColor = tg.themeParams.button_text_color || '#ffffff';
+    tg.MainButton.color = '#FFD500';
+    tg.MainButton.textColor = '#000000';
     tg.MainButton.show();
 }
 
 function showToast(message) {
     toastEl.innerText = message;
     toastEl.classList.add('show');
-    setTimeout(() => {
-        toastEl.classList.remove('show');
-    }, 2000);
+    setTimeout(() => toastEl.classList.remove('show'), 2000);
 }
 
-// Handle TG Main Button click (Checkout)
 tg.onEvent('mainButtonClicked', function() {
     processCheckout();
 });
 
-// Also bind custom checkout button
 document.getElementById('btn-checkout')?.addEventListener('click', () => {
     processCheckout();
 });
@@ -201,21 +234,18 @@ function processCheckout() {
 
     fetch('api.php', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            user: user,
-            cart: cartArray
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user: user, cart: cartArray })
     })
     .then(response => response.json())
     .then(data => {
         tg.MainButton.hideProgress();
         if(data.status === 'success') {
-            tg.showAlert("✅ Buyurtmangiz muvaffaqiyatli qabul qilindi!", () => {
-                cart = {}; // savatchani tozalash
-                tg.close(); // web appni yopish
+            tg.showAlert("✅ Buyurtmangiz qabul qilindi!", () => {
+                cart = {}; 
+                renderCart();
+                updateCartBadge();
+                tg.close();
             });
         } else {
             tg.showAlert("❌ Xatolik yuz berdi: " + data.message);
@@ -223,16 +253,17 @@ function processCheckout() {
     })
     .catch(error => {
         tg.MainButton.hideProgress();
-        // Backend ulanmagan bo'lsa local testing uchun
         if (!window.location.protocol.includes('http')) {
-             tg.showAlert("✅ Buyurtmangiz qabul qilindi! (Test rejimi)", () => {
-                tg.close();
-            });
+             tg.showAlert("✅ Buyurtma qabul qilindi (Test)", () => {
+                 cart = {};
+                 renderCart();
+                 updateCartBadge();
+                 tg.close();
+             });
         } else {
              tg.showAlert("Ulanishda xatolik yuz berdi.");
         }
     });
 }
 
-// Initialize the app
 init();
