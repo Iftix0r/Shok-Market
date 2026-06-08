@@ -157,7 +157,7 @@ window.addToCart = function(productId) {
     if (cart[productId]) {
         cart[productId].quantity += 1;
     } else {
-        const product = products.find(p => p.id === productId);
+        const product = products.find(p => p.id == productId);
         cart[productId] = { ...product, quantity: 1 };
     }
     updateCartBadge();
