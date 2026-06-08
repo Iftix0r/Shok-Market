@@ -6,6 +6,6 @@ $orderGroupId = '-5156643532'; // O'zgaradi: Buyurtmalar boradigan guruh ID si
 // Ma'lumotlar bazasi (MySQL) sozlamalari
 $db_host = 'localhost';
 $db_name = 'shok_market';
-$db_user = 'root'; // O'zingizning DB useringizni yozing
-$db_pass = ''; // O'zingizning DB parolingizni yozing   
+$db_user = 'shok_market'; // O'zingizning DB useringizni yozing
+$db_pass = 'Iftixor2006'; // O'zingizning DB parolingizni yozing   
 ?>
