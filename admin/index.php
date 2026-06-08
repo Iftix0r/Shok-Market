@@ -18,6 +18,14 @@ if (isset($_POST['change_status']) && isset($_POST['order_id'])) {
 $stmt = $pdo->query("SELECT o.*, u.first_name, u.username FROM orders o JOIN users u ON o.user_id = u.id ORDER BY o.created_at DESC");
 $orders = $stmt->fetchAll();
 
+// Barcha buyurtma qilingan mahsulotlarni (rasmlari bilan) olish
+$stmt = $pdo->query("SELECT oi.*, p.name, p.image, p.unit FROM order_items oi LEFT JOIN products p ON oi.product_id = p.id");
+$allItems = $stmt->fetchAll();
+$orderItems = [];
+foreach($allItems as $item) {
+    $orderItems[$item['order_id']][] = $item;
+}
+
 // Umumiy statistika
 $totalRevenue = 0;
 $totalOrders = count($orders);
@@ -30,27 +38,34 @@ foreach($orders as $o) {
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <title>Buyurtmalar - Admin</title>
+    <title>Buyurtmalar - Uzum uslubida</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .info-card { border-radius: 16px; padding: 20px; color: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .bg-gradient-warning { background: linear-gradient(45deg, #FFD500, #F7931A); color: #000; }
-        .bg-gradient-dark { background: linear-gradient(45deg, #2C3E50, #000000); }
+        body { background-color: #f4f5f7; font-family: 'Inter', sans-serif; }
+        .order-card { border: none; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); margin-bottom: 20px; background: #fff; overflow: hidden; }
+        .order-header { background: #fafafa; border-bottom: 1px solid #eee; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .order-body { padding: 20px; }
+        .product-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px dashed #eee; }
+        .product-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .product-img { width: 60px; height: 60px; object-fit: contain; border-radius: 8px; background: #f9f9f9; padding: 5px; border: 1px solid #eaeaea; margin-right: 15px; }
+        .product-info { flex-grow: 1; }
+        .stat-card { border-radius: 16px; padding: 24px; color: #fff; border: none; }
+        .badge-status { padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; }
     </style>
 </head>
-<body class="bg-light">
+<body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
         <div class="container">
-            <a class="navbar-brand text-warning fw-bold" href="index.php"><i class="fas fa-bolt"></i> SHOK MARKET</a>
+            <a class="navbar-brand text-warning fw-bold" href="index.php"><i class="fas fa-bolt"></i> SHOK MARKET ADMIN</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link active" href="index.php"><i class="fas fa-shopping-cart"></i> Buyurtmalar</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="index.php"><i class="fas fa-shopping-bag"></i> Buyurtmalar</a></li>
                     <li class="nav-item"><a class="nav-link" href="products.php"><i class="fas fa-box"></i> Mahsulotlar</a></li>
                 </ul>
                 <a href="logout.php" class="btn btn-outline-light btn-sm"><i class="fas fa-sign-out-alt"></i> Chiqish</a>
@@ -64,86 +79,116 @@ foreach($orders as $o) {
         <!-- Statistics -->
         <div class="row mb-4">
             <div class="col-md-6 mb-3">
-                <div class="info-card bg-gradient-warning d-flex align-items-center justify-content-between">
-                    <div>
-                        <h6 class="mb-1 text-dark fw-bold">UMUMIY DAROMAD</h6>
-                        <h2 class="mb-0 text-dark fw-bold"><?= number_format($totalRevenue, 0, '', ' ') ?> so'm</h2>
+                <div class="stat-card" style="background: linear-gradient(135deg, #FFD500, #F7931A);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 text-dark fw-bold text-uppercase">Tushum (Daromad)</h6>
+                            <h2 class="mb-0 text-dark fw-bold"><?= number_format($totalRevenue, 0, '', ' ') ?> <small>so'm</small></h2>
+                        </div>
+                        <i class="fas fa-chart-line fa-3x text-dark opacity-25"></i>
                     </div>
-                    <i class="fas fa-wallet fa-3x text-dark opacity-50"></i>
                 </div>
             </div>
             <div class="col-md-6 mb-3">
-                <div class="info-card bg-gradient-dark d-flex align-items-center justify-content-between">
-                    <div>
-                        <h6 class="mb-1 text-white-50">JAMI BUYURTMALAR</h6>
-                        <h2 class="mb-0 fw-bold"><?= $totalOrders ?> ta</h2>
+                <div class="stat-card" style="background: linear-gradient(135deg, #2C3E50, #000000);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 text-white-50 text-uppercase">Jami buyurtmalar</h6>
+                            <h2 class="mb-0 fw-bold"><?= $totalOrders ?> ta</h2>
+                        </div>
+                        <i class="fas fa-shopping-basket fa-3x text-white opacity-25"></i>
                     </div>
-                    <i class="fas fa-shopping-bag fa-3x text-white opacity-25"></i>
                 </div>
             </div>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="fw-bold m-0">So'nggi buyurtmalar ro'yxati</h4>
-        </div>
+        <h4 class="fw-bold mb-4">Mijozlar buyurtmalari</h4>
+
+        <?php if(count($orders) == 0): ?>
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-box-open fa-4x mb-3 text-light"></i>
+                <h5>Hozircha buyurtmalar yo'q</h5>
+            </div>
+        <?php endif; ?>
         
-        <div class="table-responsive bg-white rounded-4 shadow-sm p-3">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light text-muted">
-                    <tr>
-                        <th>№</th>
-                        <th>Mijoz</th>
-                        <th>Manzil & Telefon</th>
-                        <th>Summa</th>
-                        <th>Sana</th>
-                        <th>Holati</th>
-                        <th>Boshqarish</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if(count($orders) == 0): ?>
-                        <tr><td colspan="7" class="text-center py-5 text-muted"><i class="fas fa-inbox fa-3x mb-3 d-block"></i>Hozircha buyurtmalar yo'q</td></tr>
-                    <?php endif; ?>
-                    
-                    <?php foreach($orders as $o): ?>
-                    <tr>
-                        <td class="fw-bold text-secondary">#<?= $o['id'] ?></td>
-                        <td>
+        <?php foreach($orders as $o): ?>
+        <?php
+            $colors = ['new'=>'primary', 'accepted'=>'warning', 'completed'=>'success', 'cancelled'=>'danger'];
+            $labels = ['new'=>'Yangi', 'accepted'=>'Tayyorlanmoqda', 'completed'=>'Yetkazildi', 'cancelled'=>'Bekor qilingan'];
+            $col = $colors[$o['status']] ?? 'secondary';
+            $lbl = $labels[$o['status']] ?? $o['status'];
+            $items = $orderItems[$o['id']] ?? [];
+        ?>
+        <div class="order-card">
+            <div class="order-header">
+                <div>
+                    <span class="fs-5 fw-bold me-2">Buyurtma #<?= $o['id'] ?></span>
+                    <span class="badge-status bg-<?= $col ?> bg-opacity-10 text-<?= $col ?> border border-<?= $col ?>"><?= $lbl ?></span>
+                </div>
+                <div class="text-end text-muted small">
+                    <i class="far fa-clock"></i> <?= date('d.m.Y, H:i', strtotime($o['created_at'])) ?>
+                </div>
+            </div>
+            <div class="order-body row">
+                
+                <!-- Mijoz ma'lumotlari -->
+                <div class="col-md-4 mb-3 mb-md-0 border-end">
+                    <h6 class="text-muted fw-bold small mb-3">MIJOZ MA'LUMOTLARI</h6>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="bg-light rounded-circle p-2 me-2"><i class="fas fa-user text-secondary"></i></div>
+                        <div>
                             <div class="fw-bold"><?= htmlspecialchars($o['first_name']) ?></div>
-                            <small class="text-primary">@<?= htmlspecialchars($o['username']) ?></small>
-                        </td>
-                        <td style="max-width: 250px;">
-                            <div class="fw-bold"><i class="fas fa-phone-alt text-success"></i> <?= htmlspecialchars($o['phone'] ?? 'Kiritilmagan') ?></div>
-                            <small class="text-muted d-block text-truncate" title="<?= htmlspecialchars($o['address'] ?? '') ?>"><i class="fas fa-map-marker-alt text-danger"></i> <?= htmlspecialchars($o['address'] ?? 'Kiritilmagan') ?></small>
-                        </td>
-                        <td class="fw-bold text-success fs-5"><?= number_format($o['total_price'], 0, '', ' ') ?> <small>uzs</small></td>
-                        <td><?= date('d.m.Y', strtotime($o['created_at'])) ?><br><small class="text-muted"><?= date('H:i', strtotime($o['created_at'])) ?></small></td>
-                        <td>
-                            <?php
-                            $colors = ['new'=>'primary', 'accepted'=>'warning', 'completed'=>'success', 'cancelled'=>'danger'];
-                            $labels = ['new'=>'Yangi', 'accepted'=>'Tayyorlanmoqda', 'completed'=>'Yetkazildi', 'cancelled'=>'Bekor qilingan'];
-                            $col = $colors[$o['status']] ?? 'secondary';
-                            $lbl = $labels[$o['status']] ?? $o['status'];
-                            echo "<span class='badge bg-$col bg-opacity-75 text-dark fw-bold border border-$col'>$lbl</span>";
-                            ?>
-                        </td>
-                        <td>
-                            <form method="post" class="d-flex gap-2">
-                                <input type="hidden" name="order_id" value="<?= $o['id'] ?>">
-                                <select name="new_status" class="form-select form-select-sm" style="width: auto;">
-                                    <option value="new" <?= $o['status']=='new'?'selected':'' ?>>Yangi</option>
-                                    <option value="accepted" <?= $o['status']=='accepted'?'selected':'' ?>>Tayyorlanmoqda</option>
-                                    <option value="completed" <?= $o['status']=='completed'?'selected':'' ?>>Yetkazildi</option>
-                                    <option value="cancelled" <?= $o['status']=='cancelled'?'selected':'' ?>>Bekor qilish</option>
-                                </select>
-                                <button type="submit" name="change_status" class="btn btn-sm btn-dark">Saqlash</button>
-                            </form>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                            <a href="https://t.me/<?= htmlspecialchars($o['username']) ?>" class="text-decoration-none small" target="_blank">@<?= htmlspecialchars($o['username']) ?></a>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="mb-1"><i class="fas fa-phone-alt text-success me-2"></i> <a href="tel:<?= htmlspecialchars($o['phone'] ?? '') ?>" class="text-dark fw-bold text-decoration-none"><?= htmlspecialchars($o['phone'] ?? 'Kiritilmagan') ?></a></div>
+                        <div class="text-muted small"><i class="fas fa-map-marker-alt text-danger me-2"></i> <?= htmlspecialchars($o['address'] ?? 'Manzil kiritilmagan') ?></div>
+                    </div>
+                    
+                    <hr>
+                    <form method="post" class="mt-3">
+                        <label class="form-label text-muted fw-bold small mb-1">HOLATNI O'ZGARTIRISH</label>
+                        <div class="d-flex gap-2">
+                            <input type="hidden" name="order_id" value="<?= $o['id'] ?>">
+                            <select name="new_status" class="form-select form-select-sm">
+                                <option value="new" <?= $o['status']=='new'?'selected':'' ?>>Yangi</option>
+                                <option value="accepted" <?= $o['status']=='accepted'?'selected':'' ?>>Tayyorlanmoqda</option>
+                                <option value="completed" <?= $o['status']=='completed'?'selected':'' ?>>Yetkazildi</option>
+                                <option value="cancelled" <?= $o['status']=='cancelled'?'selected':'' ?>>Bekor qilish</option>
+                            </select>
+                            <button type="submit" name="change_status" class="btn btn-sm btn-dark">Saqlash</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Mahsulotlar ro'yxati -->
+                <div class="col-md-8">
+                    <h6 class="text-muted fw-bold small mb-3">BUYURTMA TARKIBI (<?= count($items) ?> xil mahsulot)</h6>
+                    <div class="products-list">
+                        <?php foreach($items as $item): ?>
+                        <div class="product-item">
+                            <img src="<?= htmlspecialchars($item['image'] ?? 'https://via.placeholder.com/60') ?>" class="product-img" alt="Rasm">
+                            <div class="product-info">
+                                <div class="fw-bold fs-6"><?= htmlspecialchars($item['name'] ?? 'Noma\'lum mahsulot') ?></div>
+                                <div class="text-muted small"><?= number_format($item['price'], 0, '', ' ') ?> so'm / <?= htmlspecialchars($item['unit'] ?? 'dona') ?></div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold bg-light px-2 py-1 rounded border"><?= $item['quantity'] ?> ta</div>
+                                <div class="fw-bold text-success mt-1"><?= number_format($item['price'] * $item['quantity'], 0, '', ' ') ?> so'm</div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    
+                    <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center bg-light p-3 rounded">
+                        <span class="fw-bold text-muted text-uppercase">Jami to'lov:</span>
+                        <span class="fs-4 fw-bold text-success"><?= number_format($o['total_price'], 0, '', ' ') ?> so'm</span>
+                    </div>
+                </div>
+            </div>
         </div>
+        <?php endforeach; ?>
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
