@@ -46,6 +46,6 @@ function sendMessage($chatId, $text, $keyboard = null, $parseMode = null) {
         ],
     ];
     $context  = stream_context_create($options);
-    file_get_contents($url, false, $context);
+    @file_get_contents($url, false, $context);
 }
 ?>
