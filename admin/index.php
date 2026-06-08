@@ -67,6 +67,7 @@ foreach($orders as $o) {
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item"><a class="nav-link active" href="index.php"><i class="fas fa-shopping-bag"></i> Buyurtmalar</a></li>
                     <li class="nav-item"><a class="nav-link" href="products.php"><i class="fas fa-box"></i> Mahsulotlar</a></li>
+                    <li class="nav-item"><a class="nav-link" href="users.php"><i class="fas fa-users"></i> Foydalanuvchilar</a></li>
                 </ul>
                 <a href="logout.php" class="btn btn-outline-light btn-sm"><i class="fas fa-sign-out-alt"></i> Chiqish</a>
             </div>

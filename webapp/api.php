@@ -17,6 +17,14 @@ $phone = $data['phone'] ?? '';
 $address = $data['address'] ?? '';
 
 try {
+    // Bloklangan foydalanuvchini tekshirish
+    $stmt = $pdo->prepare("SELECT is_banned FROM users WHERE id = ?");
+    $stmt->execute([$user['id']]);
+    $existingUser = $stmt->fetch();
+    if ($existingUser && isset($existingUser['is_banned']) && $existingUser['is_banned'] == 1) {
+        echo json_encode(['status' => 'error', 'message' => 'Siz tizimdan bloklangansiz. Buyurtma bera olmaysiz.']);
+        exit;
+    }
     // 1. Foydalanuvchini bazaga qo'shish yoki yangilash
     $stmt = $pdo->prepare("INSERT INTO users (id, first_name, username, photo_url) VALUES (?, ?, ?, ?) 
         ON DUPLICATE KEY UPDATE first_name=VALUES(first_name), username=VALUES(username), photo_url=VALUES(photo_url)");
