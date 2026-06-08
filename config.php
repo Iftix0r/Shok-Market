@@ -1,5 +1,5 @@
 <?php
-$botToken = 'SIZNING_BOT_TOKENINGIZ'; // O'zgaradi: BotFather'dan olingan token
-$webAppUrl = 'https://sizning-domeningiz.uz/webapp/index.php'; // O'zgaradi: Web App manzili
-$orderGroupId = 'SIZNING_GURUH_ID'; // O'zgaradi: Buyurtmalar boradigan guruh ID si
+$botToken = '8169898888:AAFo3wJzK-v6-2_C2U2vE_HlGq2vWv6vWv6vWv6vWv6vWv6vWv6vWv6vWv6vW'; // O'zgaradi: BotFather'dan olingan token
+$webAppUrl = 'https://shokmarket.bigsaver.ru/webapp/index.php'; // O'zgaradi: Web App manzili
+$orderGroupId = '-5156643532'; // O'zgaradi: Buyurtmalar boradigan guruh ID si
 ?>
