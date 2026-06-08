@@ -45,6 +45,18 @@
             background: var(--primary); color: #000; width: 100%; border: none; padding: 16px;
             border-radius: var(--radius-full); font-size: 16px; font-weight: 800; margin-top: 10px;
         }
+        .back-btn {
+            background: none; border: none; color: var(--text-main); font-size: 20px;
+            cursor: pointer; padding: 0 15px 0 0;
+        }
+        .page-header-flex { display: flex; align-items: center; }
+        .order-history-card {
+            background: var(--card-bg); border-radius: 16px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border-color);
+        }
+        .order-history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;}
+        .order-history-items { margin-bottom: 10px; }
+        .order-history-item { display: flex; align-items: center; margin-bottom: 8px; font-size: 14px;}
+        .order-history-item img { width: 40px; height: 40px; border-radius: 8px; margin-right: 10px; object-fit: contain; background: #fff;}
     </style>
 </head>
 <body>
@@ -191,27 +203,38 @@
                     </div>
                     
                     <div class="profile-menu">
-                        <div class="menu-item">
+                        <div class="menu-item" onclick="loadOrdersHistory()">
                             <div class="menu-icon"><i class="fas fa-history"></i></div>
                             <span>Buyurtmalar tarixi</span>
                             <i class="fas fa-chevron-right arrow"></i>
                         </div>
-                        <div class="menu-item">
+                        <div class="menu-item" onclick="tg.showAlert('Tez kunda ishga tushadi')">
                             <div class="menu-icon"><i class="fas fa-map-marker-alt"></i></div>
                             <span>Manzillarim</span>
                             <i class="fas fa-chevron-right arrow"></i>
                         </div>
-                        <div class="menu-item">
+                        <div class="menu-item" onclick="tg.showAlert('Tez kunda ishga tushadi')">
                             <div class="menu-icon"><i class="fas fa-cog"></i></div>
                             <span>Sozlamalar</span>
                             <i class="fas fa-chevron-right arrow"></i>
                         </div>
-                        <div class="menu-item">
+                        <div class="menu-item" onclick="tg.openTelegramLink('https://t.me/admin')">
                             <div class="menu-icon"><i class="fas fa-headset"></i></div>
                             <span>Qo'llab-quvvatlash</span>
                             <i class="fas fa-chevron-right arrow"></i>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <!-- Orders History Page -->
+            <section id="page-orders" class="page">
+                <header class="page-header page-header-flex">
+                    <button class="back-btn" onclick="openPage('page-profile')"><i class="fas fa-arrow-left"></i></button>
+                    <h2>Buyurtmalar tarixi</h2>
+                </header>
+                <div id="orders-container" style="padding: 15px;">
+                    <!-- Orders will be loaded here via JS -->
                 </div>
             </section>
         </main>

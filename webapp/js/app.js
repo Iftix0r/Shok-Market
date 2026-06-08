@@ -126,29 +126,106 @@ window.filterByCat = function(cat) {
     window.scrollTo(0,0);
 }
 
+window.openPage = function(pageId) {
+    document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    
+    // Bottom nav faolligini yangilash
+    document.querySelectorAll('.bottom-nav .nav-item').forEach(nav => {
+        if(nav.dataset.target === pageId) nav.classList.add('active');
+        else nav.classList.remove('active');
+    });
+}
+
 function setupNavigation() {
     const navItems = document.querySelectorAll('.nav-item');
-    const pages = document.querySelectorAll('.page');
 
     navItems.forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
             const targetId = item.closest('.nav-item').dataset.target;
-            
-            navItems.forEach(nav => nav.classList.remove('active'));
-            item.closest('.nav-item').classList.add('active');
-
-            pages.forEach(page => {
-                page.classList.remove('active');
-                if(page.id === targetId) {
-                    page.classList.add('active');
-                }
-            });
+            openPage(targetId);
 
             if(targetId === 'page-cart') {
                 renderCart();
             }
         });
+    });
+}
+
+window.loadOrdersHistory = function() {
+    openPage('page-orders');
+    const container = document.getElementById('orders-container');
+    container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fas fa-spinner fa-spin" style="font-size: 30px;"></i><p>Yuklanmoqda...</p></div>';
+    
+    fetch('get_orders.php?user_id=' + user.id)
+    .then(r => r.json())
+    .then(data => {
+        if(data.status === 'success') {
+            renderOrdersHistory(data.data);
+        } else {
+            container.innerHTML = '<p style="color:red; text-align:center;">Xatolik: ' + data.message + '</p>';
+        }
+    })
+    .catch(e => {
+        container.innerHTML = '<p style="color:red; text-align:center;">Ulanishda xatolik yuz berdi.</p>';
+    });
+}
+
+function renderOrdersHistory(orders) {
+    const container = document.getElementById('orders-container');
+    container.innerHTML = '';
+    
+    if(orders.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding: 30px; color: var(--text-muted);"><i class="fas fa-box-open" style="font-size: 40px; margin-bottom:10px;"></i><p>Sizda hali buyurtmalar yo\'q.</p></div>';
+        return;
+    }
+    
+    const statusLabels = {
+        'new': '<span style="color:#primary; font-weight:bold;">Kutilmoqda</span>',
+        'accepted': '<span style="color:#FFD500; font-weight:bold;">Tayyorlanmoqda</span>',
+        'completed': '<span style="color:green; font-weight:bold;">Yetkazildi</span>',
+        'cancelled': '<span style="color:red; font-weight:bold;">Bekor qilindi</span>'
+    };
+    
+    orders.forEach(o => {
+        const d = new Date(o.created_at);
+        const dateStr = d.toLocaleDateString('uz-UZ') + ' ' + d.toLocaleTimeString('uz-UZ', {hour: '2-digit', minute:'2-digit'});
+        
+        let itemsHtml = '<div class="order-history-items">';
+        o.items.forEach(item => {
+            const img = item.image || 'https://via.placeholder.com/40';
+            const name = item.name || 'Noma\'lum mahsulot';
+            itemsHtml += `
+                <div class="order-history-item">
+                    <img src="${img}">
+                    <div style="flex-grow:1;">
+                        <div style="font-weight:600;">${name}</div>
+                        <div style="color:var(--text-muted); font-size:12px;">${item.quantity} x ${Number(item.price).toLocaleString()} so'm</div>
+                    </div>
+                    <div style="font-weight:700;">${(item.quantity * item.price).toLocaleString()} so'm</div>
+                </div>
+            `;
+        });
+        itemsHtml += '</div>';
+        
+        const html = `
+            <div class="order-history-card">
+                <div class="order-history-header">
+                    <div>
+                        <div style="font-weight:800; font-size: 16px;">Buyurtma #${o.id}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">${dateStr}</div>
+                    </div>
+                    <div>${statusLabels[o.status] || o.status}</div>
+                </div>
+                ${itemsHtml}
+                <div style="display:flex; justify-content:space-between; align-items:center; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                    <span style="font-weight:bold; color:var(--text-muted);">Jami:</span>
+                    <span style="font-size:18px; font-weight:800; color:var(--primary);">${Number(o.total_price).toLocaleString()} so'm</span>
+                </div>
+            </div>
+        `;
+        container.innerHTML += html;
     });
 }
 
