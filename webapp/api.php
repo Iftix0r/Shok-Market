@@ -13,6 +13,8 @@ if (!$data) {
 
 $user = $data['user'];
 $cart = $data['cart'];
+$phone = $data['phone'] ?? '';
+$address = $data['address'] ?? '';
 
 try {
     // 1. Foydalanuvchini bazaga qo'shish yoki yangilash
@@ -33,9 +35,9 @@ try {
         $totalPrice += ($item['price'] * $item['quantity']);
     }
 
-    // 3. Buyurtmani bazaga yozish
-    $stmt = $pdo->prepare("INSERT INTO orders (user_id, total_price) VALUES (?, ?)");
-    $stmt->execute([$user['id'], $totalPrice]);
+    // 3. Buyurtmani bazaga yozish (Telefon va manzil qo'shilgan)
+    $stmt = $pdo->prepare("INSERT INTO orders (user_id, total_price, phone, address) VALUES (?, ?, ?, ?)");
+    $stmt->execute([$user['id'], $totalPrice, $phone, $address]);
     $orderId = $pdo->lastInsertId();
 
     // 4. Buyurtma mahsulotlarini yozish
@@ -44,7 +46,9 @@ try {
     if (!empty($user['username'])) {
         $orderText .= "🔗 <b>Username:</b> @" . htmlspecialchars($user['username']) . "\n";
     }
-    $orderText .= "🆔 <b>ID:</b> <code>" . htmlspecialchars($user['id']) . "</code>\n\n";
+    $orderText .= "📞 <b>Telefon:</b> " . htmlspecialchars($phone) . "\n";
+    $orderText .= "📍 <b>Manzil:</b> " . htmlspecialchars($address) . "\n\n";
+    
     $orderText .= "<b>📦 Mahsulotlar:</b>\n";
 
     $stmtItem = $pdo->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)");
@@ -67,6 +71,8 @@ try {
     // Mijozga tasdiq xabarini yuborish
     $userMsg = "✅ <b>Buyurtmangiz muvaffaqiyatli qabul qilindi!</b>\n\n";
     $userMsg .= "🔖 <b>Buyurtma raqami:</b> #$orderId\n";
+    $userMsg .= "📍 <b>Manzil:</b> " . htmlspecialchars($address) . "\n";
+    $userMsg .= "📞 <b>Telefoningiz:</b> " . htmlspecialchars($phone) . "\n";
     $userMsg .= "📊 <b>Holati:</b> ⏳ Qabul qilindi, tayyorlanmoqda\n\n";
     $userMsg .= "<b>📦 Sizning buyurtmalaringiz:</b>\n";
     
@@ -78,7 +84,7 @@ try {
     }
     
     $userMsg .= "\n💰 <b>Jami to'lov:</b> " . number_format($totalPrice, 0, '', ' ') . " so'm\n\n";
-    $userMsg .= "<i>📞 Tez orada xodimlarimiz siz bilan bog'lanishadi. Haridingiz uchun rahmat!</i>";
+    $userMsg .= "<i>📞 Tez orada yetkazib beruvchilarimiz ko'rsatilgan raqamga aloqaga chiqishadi. Haridingiz uchun rahmat!</i>";
 
     $userKeyboard = [
         'inline_keyboard' => [

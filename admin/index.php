@@ -17,6 +17,15 @@ if (isset($_POST['change_status']) && isset($_POST['order_id'])) {
 // Barcha buyurtmalarni olish
 $stmt = $pdo->query("SELECT o.*, u.first_name, u.username FROM orders o JOIN users u ON o.user_id = u.id ORDER BY o.created_at DESC");
 $orders = $stmt->fetchAll();
+
+// Umumiy statistika
+$totalRevenue = 0;
+$totalOrders = count($orders);
+foreach($orders as $o) {
+    if($o['status'] == 'completed' || $o['status'] == 'accepted') {
+        $totalRevenue += $o['total_price'];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="uz">
@@ -25,6 +34,11 @@ $orders = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .info-card { border-radius: 16px; padding: 20px; color: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .bg-gradient-warning { background: linear-gradient(45deg, #FFD500, #F7931A); color: #000; }
+        .bg-gradient-dark { background: linear-gradient(45deg, #2C3E50, #000000); }
+    </style>
 </head>
 <body class="bg-light">
     <!-- Navbar -->
@@ -46,17 +60,40 @@ $orders = $stmt->fetchAll();
 
     <!-- Content -->
     <div class="container mt-4 mb-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="fw-bold m-0">So'nggi buyurtmalar</h3>
-            <span class="badge bg-warning text-dark fs-6"><?= count($orders) ?> ta</span>
+        
+        <!-- Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-6 mb-3">
+                <div class="info-card bg-gradient-warning d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="mb-1 text-dark fw-bold">UMUMIY DAROMAD</h6>
+                        <h2 class="mb-0 text-dark fw-bold"><?= number_format($totalRevenue, 0, '', ' ') ?> so'm</h2>
+                    </div>
+                    <i class="fas fa-wallet fa-3x text-dark opacity-50"></i>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="info-card bg-gradient-dark d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="mb-1 text-white-50">JAMI BUYURTMALAR</h6>
+                        <h2 class="mb-0 fw-bold"><?= $totalOrders ?> ta</h2>
+                    </div>
+                    <i class="fas fa-shopping-bag fa-3x text-white opacity-25"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold m-0">So'nggi buyurtmalar ro'yxati</h4>
         </div>
         
-        <div class="table-responsive bg-white rounded-3 shadow-sm p-2">
+        <div class="table-responsive bg-white rounded-4 shadow-sm p-3">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light text-muted">
                     <tr>
                         <th>№</th>
                         <th>Mijoz</th>
+                        <th>Manzil & Telefon</th>
                         <th>Summa</th>
                         <th>Sana</th>
                         <th>Holati</th>
@@ -65,7 +102,7 @@ $orders = $stmt->fetchAll();
                 </thead>
                 <tbody>
                     <?php if(count($orders) == 0): ?>
-                        <tr><td colspan="6" class="text-center py-4 text-muted">Hozircha buyurtmalar yo'q</td></tr>
+                        <tr><td colspan="7" class="text-center py-5 text-muted"><i class="fas fa-inbox fa-3x mb-3 d-block"></i>Hozircha buyurtmalar yo'q</td></tr>
                     <?php endif; ?>
                     
                     <?php foreach($orders as $o): ?>
@@ -75,7 +112,11 @@ $orders = $stmt->fetchAll();
                             <div class="fw-bold"><?= htmlspecialchars($o['first_name']) ?></div>
                             <small class="text-primary">@<?= htmlspecialchars($o['username']) ?></small>
                         </td>
-                        <td class="fw-bold text-success"><?= number_format($o['total_price'], 0, '', ' ') ?> so'm</td>
+                        <td style="max-width: 250px;">
+                            <div class="fw-bold"><i class="fas fa-phone-alt text-success"></i> <?= htmlspecialchars($o['phone'] ?? 'Kiritilmagan') ?></div>
+                            <small class="text-muted d-block text-truncate" title="<?= htmlspecialchars($o['address'] ?? '') ?>"><i class="fas fa-map-marker-alt text-danger"></i> <?= htmlspecialchars($o['address'] ?? 'Kiritilmagan') ?></small>
+                        </td>
+                        <td class="fw-bold text-success fs-5"><?= number_format($o['total_price'], 0, '', ' ') ?> <small>uzs</small></td>
                         <td><?= date('d.m.Y', strtotime($o['created_at'])) ?><br><small class="text-muted"><?= date('H:i', strtotime($o['created_at'])) ?></small></td>
                         <td>
                             <?php

@@ -32,10 +32,19 @@ try {
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id BIGINT,
         total_price INT NOT NULL,
+        phone VARCHAR(50) NULL,
+        address TEXT NULL,
         status VARCHAR(50) DEFAULT 'new',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id)
     )");
+
+    try {
+        $pdo->exec("ALTER TABLE orders ADD COLUMN phone VARCHAR(50) NULL AFTER total_price");
+        $pdo->exec("ALTER TABLE orders ADD COLUMN address TEXT NULL AFTER phone");
+    } catch (PDOException $e) {
+        // ustunlar allaqachon mavjud bo'lsa xato bermaydi
+    }
 
     // Buyurtma qilingan mahsulotlar
     $pdo->exec("CREATE TABLE IF NOT EXISTS order_items (
@@ -62,7 +71,7 @@ try {
         $pdo->exec($insert);
     }
 
-    echo "✅ Ma'lumotlar bazasi va jadvallar muvaffaqiyatli o'rnatildi!";
+    echo "✅ Ma'lumotlar bazasi va jadvallar muvaffaqiyatli o'rnatildi/yangilandi!";
 
 } catch (PDOException $e) {
     die("Xatolik yuz berdi: " . $e->getMessage());

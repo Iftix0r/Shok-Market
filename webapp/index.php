@@ -7,17 +7,52 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts: Outfit for a modern, rounded, vibrant look -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Checkout Modal Styles */
+        .checkout-modal {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+            align-items: flex-end;
+        }
+        .checkout-modal.active { display: flex; }
+        .checkout-content {
+            background: var(--card-bg);
+            width: 100%;
+            border-radius: 24px 24px 0 0;
+            padding: 24px 20px 30px;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .checkout-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+        }
+        .checkout-header h3 { font-size: 20px; font-weight: 800; }
+        .checkout-close { background: none; border: none; font-size: 24px; color: var(--text-muted); cursor: pointer;}
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--text-muted); }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border-color);
+            background: var(--bg-color); color: var(--text-main); font-size: 15px; outline: none; font-weight: 500;
+        }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--primary-dark); }
+        .checkout-submit {
+            background: var(--primary); color: #000; width: 100%; border: none; padding: 16px;
+            border-radius: var(--radius-full); font-size: 16px; font-weight: 800; margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
     <div id="app">
-        <!-- Main Content -->
         <main id="main-content">
             
             <!-- Home Page -->
             <section id="page-home" class="page active">
-                <!-- Header -->
                 <header class="app-header">
                     <div class="logo">
                         <div class="logo-icon"><i class="fas fa-bolt"></i></div>
@@ -29,7 +64,6 @@
                     </div>
                 </header>
 
-                <!-- Search -->
                 <div class="search-container">
                     <div class="search-box">
                         <i class="fas fa-search search-icon"></i>
@@ -38,7 +72,6 @@
                     </div>
                 </div>
 
-                <!-- Banner Slider -->
                 <div class="banner-slider">
                     <div class="banner">
                         <div class="banner-content">
@@ -53,7 +86,6 @@
                     </div>
                 </div>
 
-                <!-- Categories -->
                 <div class="section-title">
                     <h4>Kategoriyalar</h4>
                 </div>
@@ -80,7 +112,6 @@
                     </div>
                 </div>
 
-                <!-- Products Grid -->
                 <div class="section-header">
                     <h4>Ommabop Mahsulotlar</h4>
                     <a href="#" class="view-all" onclick="document.querySelector('[data-target=\'page-catalog\']').click()">Barchasi <i class="fas fa-chevron-right"></i></a>
@@ -118,7 +149,6 @@
                     <h2>Savatcha</h2>
                 </header>
                 <div id="cart-items" class="cart-container">
-                    <!-- Cart items -->
                 </div>
                 <div class="cart-summary" style="display:none;">
                     <div class="summary-row">
@@ -186,7 +216,6 @@
             </section>
         </main>
 
-        <!-- Bottom Navigation -->
         <nav class="bottom-nav">
             <a href="#" class="nav-item active" data-target="page-home">
                 <i class="fas fa-home"></i>
@@ -212,6 +241,29 @@
                 <span>Profil</span>
             </a>
         </nav>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkoutModal" class="checkout-modal">
+        <div class="checkout-content">
+            <div class="checkout-header">
+                <h3>Buyurtmani rasmiylashtirish</h3>
+                <button class="checkout-close" onclick="closeCheckout()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="form-group">
+                <label>Ismingiz</label>
+                <input type="text" id="checkout-name" placeholder="Ismingizni kiriting" required>
+            </div>
+            <div class="form-group">
+                <label>Telefon raqam</label>
+                <input type="tel" id="checkout-phone" placeholder="+998 90 123 45 67" required>
+            </div>
+            <div class="form-group">
+                <label>Yetkazib berish manzili</label>
+                <textarea id="checkout-address" rows="3" placeholder="Tuman, ko'cha, uy raqami, mo'ljal..." required></textarea>
+            </div>
+            <button class="checkout-submit" onclick="submitOrder()">Tasdiqlash va Buyurtma berish</button>
+        </div>
     </div>
 
     <div id="toast" class="toast"></div>

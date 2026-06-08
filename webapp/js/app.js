@@ -22,11 +22,9 @@ const toastEl = document.getElementById('toast');
 const searchInput = document.getElementById('search-input');
 
 function init() {
-    // Profil ism va username
     document.getElementById('profile-name').innerText = user.first_name;
     document.getElementById('profile-username').innerText = user.username ? '@' + user.username : '';
 
-    // Profil rasmini o'rnatish
     if (user.photo_url) {
         document.getElementById('header-avatar-img').src = user.photo_url;
         document.getElementById('header-avatar-img').style.display = 'block';
@@ -37,9 +35,10 @@ function init() {
         document.getElementById('profile-avatar-icon').style.display = 'none';
     }
 
-    // Mahsulotlarni bazadan yuklash
-    loadProducts();
+    // Prefill checkout name
+    document.getElementById('checkout-name').value = user.first_name || '';
 
+    loadProducts();
     setupNavigation();
     setupCategoryFilter();
 
@@ -162,7 +161,6 @@ window.addToCart = function(productId) {
     }
     updateCartBadge();
     
-    // Re-render home list to show 'added' state
     const activeCatBtn = document.querySelector('.cat-item.active');
     renderProducts(activeCatBtn ? activeCatBtn.dataset.cat : 'all');
     
@@ -178,7 +176,6 @@ window.updateQty = function(productId, delta) {
         renderCart();
         updateCartBadge();
         
-        // Re-render home list if visible
         if(document.getElementById('page-home').classList.contains('active')) {
             const activeCatBtn = document.querySelector('.cat-item.active');
             renderProducts(activeCatBtn ? activeCatBtn.dataset.cat : 'all');
@@ -248,44 +245,76 @@ function showToast(message) {
     setTimeout(() => toastEl.classList.remove('show'), 2000);
 }
 
+// Open Checkout Modal
+function openCheckout() {
+    const cartArray = Object.values(cart);
+    if(cartArray.length === 0) return;
+    document.getElementById('checkoutModal').classList.add('active');
+    tg.MainButton.hide();
+}
+
+window.closeCheckout = function() {
+    document.getElementById('checkoutModal').classList.remove('active');
+    renderCart(); // Re-show main button
+}
+
 tg.onEvent('mainButtonClicked', function() {
-    processCheckout();
+    openCheckout();
 });
 
 document.getElementById('btn-checkout')?.addEventListener('click', () => {
-    processCheckout();
+    openCheckout();
 });
 
-function processCheckout() {
+window.submitOrder = function() {
+    const name = document.getElementById('checkout-name').value.trim();
+    const phone = document.getElementById('checkout-phone').value.trim();
+    const address = document.getElementById('checkout-address').value.trim();
+
+    if(!name || !phone || !address) {
+        tg.showAlert("Iltimos, ismingiz, telefon raqam va manzilni to'liq kiriting!");
+        return;
+    }
+
     const cartArray = Object.values(cart);
     if(cartArray.length === 0) return;
 
-    tg.MainButton.showProgress();
+    // Update user name if they changed it
+    user.first_name = name;
+
+    const submitBtn = document.querySelector('.checkout-submit');
+    submitBtn.innerText = "Kutib turing...";
+    submitBtn.disabled = true;
 
     fetch('api.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user: user, cart: cartArray })
+        body: JSON.stringify({ user: user, cart: cartArray, phone: phone, address: address })
     })
     .then(response => response.json())
     .then(data => {
-        tg.MainButton.hideProgress();
         if(data.status === 'success') {
             tg.showAlert("✅ Buyurtmangiz qabul qilindi! Buyurtma raqami: #" + data.order_id, () => {
                 cart = {}; 
+                closeCheckout();
                 renderCart();
                 updateCartBadge();
                 tg.close();
             });
         } else {
             tg.showAlert("❌ Xatolik yuz berdi: " + data.message);
+            submitBtn.innerText = "Tasdiqlash va Buyurtma berish";
+            submitBtn.disabled = false;
         }
     })
     .catch(error => {
-        tg.MainButton.hideProgress();
+        submitBtn.innerText = "Tasdiqlash va Buyurtma berish";
+        submitBtn.disabled = false;
+        
         if (!window.location.protocol.includes('http')) {
              tg.showAlert("✅ Buyurtma qabul qilindi (Test)", () => {
                  cart = {};
+                 closeCheckout();
                  renderCart();
                  updateCartBadge();
                  tg.close();
