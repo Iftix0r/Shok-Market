@@ -103,7 +103,32 @@ foreach($orders as $o) {
             </div>
         </div>
 
-        <h4 class="fw-bold mb-4">Mijozlar buyurtmalari</h4>
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+            <h4 class="fw-bold m-0">Mijozlar buyurtmalari</h4>
+            <div class="position-relative" style="max-width: 300px; width:100%;">
+                <i class="fas fa-search position-absolute text-muted" style="top:12px; left:15px;"></i>
+                <input type="text" id="searchOrder" class="form-control rounded-pill bg-white border-0 shadow-sm ps-5" placeholder="ID, ism yoki raqam qidirish...">
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <ul class="nav nav-pills mb-4 gap-2 border-bottom pb-3" id="orderTabs">
+            <li class="nav-item">
+                <button class="nav-link active rounded-pill px-4 fw-bold shadow-sm border" data-filter="all">Barchasi</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link bg-white text-dark rounded-pill px-4 fw-bold shadow-sm border" data-filter="new">Yangi <span class="badge bg-danger ms-1 rounded-pill"></span></button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link bg-white text-dark rounded-pill px-4 fw-bold shadow-sm border" data-filter="accepted">Jarayonda</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link bg-white text-dark rounded-pill px-4 fw-bold shadow-sm border" data-filter="completed">Yetkazildi</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link bg-white text-dark rounded-pill px-4 fw-bold shadow-sm border" data-filter="cancelled">Bekor qilingan</button>
+            </li>
+        </ul>
 
         <?php if(count($orders) == 0): ?>
             <div class="text-center py-5 text-muted">
@@ -120,7 +145,7 @@ foreach($orders as $o) {
             $lbl = $labels[$o['status']] ?? $o['status'];
             $items = $orderItems[$o['id']] ?? [];
         ?>
-        <div class="order-card">
+        <div class="order-card" data-status="<?= $o['status'] ?>">
             <div class="order-header">
                 <div>
                     <span class="fs-5 fw-bold me-2">Buyurtma #<?= $o['id'] ?></span>
@@ -193,5 +218,52 @@ foreach($orders as $o) {
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('searchOrder').addEventListener('input', filterOrders);
+        
+        document.querySelectorAll('#orderTabs .nav-link').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remove active classes
+                document.querySelectorAll('#orderTabs .nav-link').forEach(b => {
+                    b.classList.remove('active');
+                    b.classList.add('bg-white', 'text-dark');
+                });
+                // Add active to clicked
+                this.classList.remove('bg-white', 'text-dark');
+                this.classList.add('active');
+                
+                filterOrders();
+            });
+        });
+
+        function filterOrders() {
+            const query = document.getElementById('searchOrder').value.toLowerCase();
+            const filter = document.querySelector('#orderTabs .nav-link.active').getAttribute('data-filter');
+            
+            document.querySelectorAll('.order-card').forEach(card => {
+                const status = card.getAttribute('data-status');
+                const text = card.innerText.toLowerCase();
+                
+                const matchesStatus = (filter === 'all' || status === filter);
+                const matchesSearch = (text.includes(query));
+                
+                if (matchesStatus && matchesSearch) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        // Yangi buyurtmalar sonini chiqarish
+        window.addEventListener('DOMContentLoaded', () => {
+            const newCount = document.querySelectorAll('.order-card[data-status="new"]').length;
+            if(newCount > 0) {
+                document.querySelector('[data-filter="new"] .badge').innerText = newCount;
+            } else {
+                document.querySelector('[data-filter="new"] .badge').style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
