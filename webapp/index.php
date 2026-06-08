@@ -24,7 +24,8 @@
                         <span>SHOK<br><b style="font-size:16px;">MARKET</b></span>
                     </div>
                     <div class="header-profile" onclick="document.querySelector('[data-target=\'page-profile\']').click()">
-                        <i class="fas fa-user"></i>
+                        <img src="" id="header-avatar-img" style="display:none; width:100%; height:100%; border-radius:50%; object-fit:cover;">
+                        <i class="fas fa-user" id="header-avatar-icon"></i>
                     </div>
                 </header>
 
@@ -152,7 +153,8 @@
                 <div class="profile-wrap">
                     <div class="profile-card">
                         <div class="avatar-large">
-                            <i class="fas fa-user"></i>
+                            <img src="" id="profile-avatar-img" style="display:none; width:100%; height:100%; border-radius:50%; object-fit:cover;">
+                            <i class="fas fa-user" id="profile-avatar-icon"></i>
                         </div>
                         <h2 id="profile-name">Mehmon</h2>
                         <p id="profile-username">@username</p>

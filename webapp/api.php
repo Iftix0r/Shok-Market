@@ -1,5 +1,6 @@
 <?php
 require_once '../config.php';
+require_once '../db.php';
 
 header('Content-Type: application/json');
 
@@ -13,32 +14,64 @@ if (!$data) {
 $user = $data['user'];
 $cart = $data['cart'];
 
-$orderText = "<b>🛒 Yangi Buyurtma (Shok Market)!</b>\n\n";
-$orderText .= "👤 <b>Mijoz:</b> " . htmlspecialchars($user['first_name'] ?? 'Noma\'lum') . "\n";
-if (!empty($user['username'])) {
-    $orderText .= "🔗 <b>Username:</b> @" . htmlspecialchars($user['username']) . "\n";
+try {
+    // 1. Foydalanuvchini bazaga qo'shish yoki yangilash
+    $stmt = $pdo->prepare("INSERT INTO users (id, first_name, username, photo_url) VALUES (?, ?, ?, ?) 
+        ON DUPLICATE KEY UPDATE first_name=VALUES(first_name), username=VALUES(username), photo_url=VALUES(photo_url)");
+    
+    $photoUrl = $user['photo_url'] ?? '';
+    $stmt->execute([
+        $user['id'], 
+        $user['first_name'] ?? 'Mehmon', 
+        $user['username'] ?? '', 
+        $photoUrl
+    ]);
+
+    // 2. Umumiy summani hisoblash
+    $totalPrice = 0;
+    foreach ($cart as $item) {
+        $totalPrice += ($item['price'] * $item['quantity']);
+    }
+
+    // 3. Buyurtmani bazaga yozish
+    $stmt = $pdo->prepare("INSERT INTO orders (user_id, total_price) VALUES (?, ?)");
+    $stmt->execute([$user['id'], $totalPrice]);
+    $orderId = $pdo->lastInsertId();
+
+    // 4. Buyurtma mahsulotlarini yozish
+    $orderText = "<b>🛒 Yangi Buyurtma (Shok Market)! #$orderId</b>\n\n";
+    $orderText .= "👤 <b>Mijoz:</b> " . htmlspecialchars($user['first_name'] ?? 'Noma\'lum') . "\n";
+    if (!empty($user['username'])) {
+        $orderText .= "🔗 <b>Username:</b> @" . htmlspecialchars($user['username']) . "\n";
+    }
+    $orderText .= "🆔 <b>ID:</b> <code>" . htmlspecialchars($user['id']) . "</code>\n\n";
+    $orderText .= "<b>📦 Mahsulotlar:</b>\n";
+
+    $stmtItem = $pdo->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)");
+    
+    foreach ($cart as $item) {
+        $price = $item['price'];
+        $qty = $item['quantity'];
+        $sum = $price * $qty;
+        
+        $stmtItem->execute([$orderId, $item['id'], $qty, $price]);
+        
+        $orderText .= "- <b>" . htmlspecialchars($item['name']) . "</b> x {$qty} ta = " . number_format($sum, 0, '', ' ') . " so'm\n";
+    }
+
+    $orderText .= "\n💰 <b>Jami summa:</b> " . number_format($totalPrice, 0, '', ' ') . " so'm";
+
+    // 5. Buyurtmani Telegram guruhga yuborish
+    sendMessage($orderGroupId, $orderText, null, 'HTML');
+
+    // Mijozga tasdiq xabarini yuborish
+    sendMessage($user['id'], "✅ <b>Buyurtmangiz qabul qilindi!</b>\nBuyurtma raqamingiz: <b>#$orderId</b>\nTez orada siz bilan bog'lanamiz.", null, 'HTML');
+
+    echo json_encode(['status' => 'success', 'order_id' => $orderId]);
+
+} catch (PDOException $e) {
+    echo json_encode(['status' => 'error', 'message' => "Baza xatosi: " . $e->getMessage()]);
 }
-$orderText .= "🆔 <b>ID:</b> <code>" . htmlspecialchars($user['id']) . "</code>\n\n";
-
-$totalPrice = 0;
-$orderText .= "<b>📦 Mahsulotlar:</b>\n";
-foreach ($cart as $item) {
-    $price = $item['price'];
-    $qty = $item['quantity'];
-    $sum = $price * $qty;
-    $orderText .= "- <b>" . htmlspecialchars($item['name']) . "</b> x {$qty} ta = " . number_format($sum, 0, '', ' ') . " so'm\n";
-    $totalPrice += $sum;
-}
-
-$orderText .= "\n💰 <b>Jami summa:</b> " . number_format($totalPrice, 0, '', ' ') . " so'm";
-
-// Buyurtmani guruhga yuborish
-sendMessage($orderGroupId, $orderText, null, 'HTML');
-
-// Mijozga tasdiq xabarini yuborish
-sendMessage($user['id'], "✅ <b>Buyurtmangiz muvaffaqiyatli qabul qilindi!</b>\n\nTez orada siz bilan bog'lanamiz.", null, 'HTML');
-
-echo json_encode(['status' => 'success']);
 
 function sendMessage($chatId, $text, $keyboard = null, $parseMode = null) {
     global $botToken;
@@ -59,6 +92,6 @@ function sendMessage($chatId, $text, $keyboard = null, $parseMode = null) {
         ],
     ];
     $context  = stream_context_create($options);
-    file_get_contents($url, false, $context);
+    @file_get_contents($url, false, $context);
 }
 ?>

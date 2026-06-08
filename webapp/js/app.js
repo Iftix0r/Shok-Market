@@ -5,19 +5,11 @@ const user = tg.initDataUnsafe?.user || {
     id: 123456,
     first_name: "Mehmon",
     username: "foydalanuvchi",
-    language_code: "uz"
+    language_code: "uz",
+    photo_url: ""
 };
 
-// Oziq-ovqat mahsulotlari (rasmga mos)
-const products = [
-    { id: 1, name: "Sariq Banan", price: 14500, unit: "so'm/kg", category: "fruits", image: "https://images.unsplash.com/photo-1603833665858-e61d17a86224?auto=format&fit=crop&q=80&w=200&h=200" },
-    { id: 2, name: "Qizil Pomidor", price: 14500, unit: "so'm/kg", category: "fruits", image: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&q=80&w=200&h=200" },
-    { id: 3, name: "Yangi Sut 1L", price: 14500, unit: "so'm/dona", category: "meat", image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&q=80&w=200&h=200" },
-    { id: 4, name: "Issiq Non", price: 14500, unit: "so'm/dona", category: "bakery", image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=200&h=200" },
-    { id: 5, name: "Srinlutile Ichimliklar", price: 14500, unit: "so'm/dona", category: "drinks", image: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80&w=200&h=200" },
-    { id: 6, name: "Yangi Bodring", price: 10500, unit: "so'm/kg", category: "fruits", image: "https://images.unsplash.com/photo-1604977042946-1eecc30f269e?auto=format&fit=crop&q=80&w=200&h=200" }
-];
-
+let products = [];
 let cart = {};
 
 const productsContainer = document.getElementById('products-container');
@@ -30,10 +22,24 @@ const toastEl = document.getElementById('toast');
 const searchInput = document.getElementById('search-input');
 
 function init() {
+    // Profil ism va username
     document.getElementById('profile-name').innerText = user.first_name;
     document.getElementById('profile-username').innerText = user.username ? '@' + user.username : '';
 
-    renderProducts('all');
+    // Profil rasmini o'rnatish
+    if (user.photo_url) {
+        document.getElementById('header-avatar-img').src = user.photo_url;
+        document.getElementById('header-avatar-img').style.display = 'block';
+        document.getElementById('header-avatar-icon').style.display = 'none';
+
+        document.getElementById('profile-avatar-img').src = user.photo_url;
+        document.getElementById('profile-avatar-img').style.display = 'block';
+        document.getElementById('profile-avatar-icon').style.display = 'none';
+    }
+
+    // Mahsulotlarni bazadan yuklash
+    loadProducts();
+
     setupNavigation();
     setupCategoryFilter();
 
@@ -44,6 +50,24 @@ function init() {
     });
 }
 
+function loadProducts() {
+    productsContainer.innerHTML = '<div style="grid-column: span 2; text-align: center; padding: 40px; color: var(--text-muted);"><i class="fas fa-spinner fa-spin" style="font-size:30px;"></i><p style="margin-top:10px;">Yuklanmoqda...</p></div>';
+    
+    fetch('get_products.php')
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') {
+                products = data.data;
+                renderProducts('all');
+            } else {
+                productsContainer.innerHTML = `<p style="grid-column: span 2; color: red;">Xatolik: ${data.message}</p>`;
+            }
+        })
+        .catch(err => {
+            productsContainer.innerHTML = `<p style="grid-column: span 2; color: red;">Ulanishda xatolik yuz berdi.</p>`;
+        });
+}
+
 function renderProducts(category) {
     const filtered = category === 'all' ? products : products.filter(p => p.category === category);
     renderFilteredProducts(filtered);
@@ -51,6 +75,12 @@ function renderProducts(category) {
 
 function renderFilteredProducts(productsList) {
     productsContainer.innerHTML = '';
+    
+    if (productsList.length === 0) {
+        productsContainer.innerHTML = '<p style="grid-column: span 2; text-align: center; color: var(--text-muted); padding: 20px;">Mahsulot topilmadi.</p>';
+        return;
+    }
+
     productsList.forEach(p => {
         const qtyInCart = cart[p.id] ? cart[p.id].quantity : 0;
         const btnHtml = qtyInCart > 0 
@@ -62,7 +92,7 @@ function renderFilteredProducts(productsList) {
         card.innerHTML = `
             <button class="fav-btn"><i class="fas fa-bookmark" style="color:var(--primary)"></i></button>
             <img src="${p.image}" class="product-img" alt="${p.name}">
-            <div class="product-price">${p.price.toLocaleString('uz-UZ')} <span style="font-size:10px; font-weight:600">${p.unit}</span></div>
+            <div class="product-price">${Number(p.price).toLocaleString('uz-UZ')} <span style="font-size:10px; font-weight:600">${p.unit}</span></div>
             <div class="product-title">${p.name}</div>
             ${btnHtml}
         `;
@@ -191,7 +221,7 @@ function renderCart() {
             <img src="${item.image}" class="cart-item-img" alt="${item.name}">
             <div class="cart-info">
                 <div class="cart-title">${item.name}</div>
-                <div class="cart-price">${item.price.toLocaleString('uz-UZ')} so'm</div>
+                <div class="cart-price">${Number(item.price).toLocaleString('uz-UZ')} so'm</div>
             </div>
             <div class="qty-controls">
                 <button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
@@ -241,7 +271,7 @@ function processCheckout() {
     .then(data => {
         tg.MainButton.hideProgress();
         if(data.status === 'success') {
-            tg.showAlert("✅ Buyurtmangiz qabul qilindi!", () => {
+            tg.showAlert("✅ Buyurtmangiz qabul qilindi! Buyurtma raqami: #" + data.order_id, () => {
                 cart = {}; 
                 renderCart();
                 updateCartBadge();
