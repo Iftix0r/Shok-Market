@@ -66,7 +66,18 @@ try {
     $orderText .= "\n💰 <b>Jami summa:</b> " . number_format($totalPrice, 0, '', ' ') . " so'm";
 
     // 5. Buyurtmani Telegram guruhga yuborish
-    sendMessage($orderGroupId, $orderText, null, 'HTML');
+    $groupKeyboard = [
+        'inline_keyboard' => [
+            [
+                ['text' => '⏳ Qabul qilish', 'callback_data' => 'status_accepted_' . $orderId],
+                ['text' => '✅ Yetkazildi', 'callback_data' => 'status_completed_' . $orderId]
+            ],
+            [
+                ['text' => '❌ Bekor qilish', 'callback_data' => 'status_cancelled_' . $orderId]
+            ]
+        ]
+    ];
+    sendMessage($orderGroupId, $orderText, $groupKeyboard, 'HTML');
 
     // Mijozga tasdiq xabarini yuborish
     $userMsg = "✅ <b>Buyurtmangiz muvaffaqiyatli qabul qilindi!</b>\n\n";
