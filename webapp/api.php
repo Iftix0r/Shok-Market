@@ -65,7 +65,30 @@ try {
     sendMessage($orderGroupId, $orderText, null, 'HTML');
 
     // Mijozga tasdiq xabarini yuborish
-    sendMessage($user['id'], "✅ <b>Buyurtmangiz qabul qilindi!</b>\nBuyurtma raqamingiz: <b>#$orderId</b>\nTez orada siz bilan bog'lanamiz.", null, 'HTML');
+    $userMsg = "✅ <b>Buyurtmangiz muvaffaqiyatli qabul qilindi!</b>\n\n";
+    $userMsg .= "🔖 <b>Buyurtma raqami:</b> #$orderId\n";
+    $userMsg .= "📊 <b>Holati:</b> ⏳ Qabul qilindi, tayyorlanmoqda\n\n";
+    $userMsg .= "<b>📦 Sizning buyurtmalaringiz:</b>\n";
+    
+    foreach ($cart as $item) {
+        $price = $item['price'];
+        $qty = $item['quantity'];
+        $sum = $price * $qty;
+        $userMsg .= "🔸 " . htmlspecialchars($item['name']) . " x {$qty} = " . number_format($sum, 0, '', ' ') . " so'm\n";
+    }
+    
+    $userMsg .= "\n💰 <b>Jami to'lov:</b> " . number_format($totalPrice, 0, '', ' ') . " so'm\n\n";
+    $userMsg .= "<i>📞 Tez orada xodimlarimiz siz bilan bog'lanishadi. Haridingiz uchun rahmat!</i>";
+
+    $userKeyboard = [
+        'inline_keyboard' => [
+            [
+                ['text' => '👨‍💻 Biz bilan aloqa', 'url' => 'https://t.me/admin'] // Admin username yoziladi
+            ]
+        ]
+    ];
+
+    sendMessage($user['id'], $userMsg, $userKeyboard, 'HTML');
 
     echo json_encode(['status' => 'success', 'order_id' => $orderId]);
 
